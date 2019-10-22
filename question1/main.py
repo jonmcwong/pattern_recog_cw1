@@ -1,5 +1,6 @@
 import scipy.io 
 import numpy as np
+from numpy import linalg as LA
 
 mat = scipy.io.loadmat('face.mat')
 
@@ -27,3 +28,15 @@ print(training_data)
 print("testing_data")
 print(len(testing_data))
 print(testing_data)
+
+
+cov_mat = np.cov(training_data)
+print("length of covariance matrix")
+print(len(cov_mat))
+
+w, v = LA.eig(cov_mat)
+
+print('w')
+print(len(w))
+print('v')
+print(v)
