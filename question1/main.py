@@ -3,6 +3,21 @@ import numpy as np
 from numpy import linalg as LA
 import matplotlib
 import time
+from PIL import Image
+
+"""
+
+im = Image.fromarray(arr, mode="L")
+im.show()
+"""
+
+def show_img(img):
+    # shows image as png
+    # img must be a 2576 1d vector
+    img.resize((46,56))
+    im = Image.fromarray(np.transpose(img), mode="L")
+    im.show()
+
 
 # load MATLAB matrix into a python dictionary
 mat = scipy.io.loadmat('face.mat')
@@ -32,6 +47,9 @@ end = time.time()
 print("time required to compute low-dim-cov-mat : ",end - start)
 print("length of covariance matrix")
 print(len(low_cov_mat))
+
+
+
 
 # compute the eigenvalues and eigenvectors of the covariance matrix
 # w -> eigenvalues
