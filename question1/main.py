@@ -35,13 +35,15 @@ print("testing_data")
 print(len(testing_data))
 print(testing_data)
 
-#compute the covariance matrix
+#compute the covariance matrix for low-dimensional comutation
 cov_mat = np.cov(training_data)
 print("length of covariance matrix")
 print(len(cov_mat))
 
 #compute the eigenvalues and eigenvectors of the covariance matrix
 w, v = LA.eig(cov_mat)
+
+#compute
 
 print('w')
 print(len(w))
