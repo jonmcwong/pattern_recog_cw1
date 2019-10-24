@@ -47,9 +47,6 @@ end = time.time()
 print("time required to compute low-dim-cov-mat : ",end - start)
 print("length of covariance matrix", len(low_cov_mat))
 
-
-
-
 # compute the eigenvalues and eigenvectors of the covariance matrix
 # w -> eigenvalues
 # v -> eigenvectors
