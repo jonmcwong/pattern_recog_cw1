@@ -1,23 +1,16 @@
-import scipy.io 
+import scipy.io
 import numpy as np
 from numpy import linalg as LA
 import matplotlib
 import time
 from PIL import Image
 
-"""
-
-im = Image.fromarray(arr, mode="L")
-im.show()
-"""
-
 def show_img(img):
     # shows image as png
     # img must be a 2576 1d vector
     img.resize((46,56))
-    im = Image.fromarray(np.transpose(img), mode="L")
+    im = Image.fromarray(img, mode="L")
     im.show()
-
 
 # load MATLAB matrix into a python dictionary
 mat = scipy.io.loadmat('face.mat')
@@ -26,7 +19,7 @@ mat = scipy.io.loadmat('face.mat')
 # There are headers so we can't use the dictionary as a data only object
 raw_data = mat['X']
 
-#transpose to the correct orientation so we can separate the images into training and testing datasets
+# transpose to the correct orientation so we can separate the images into training and testing datasets
 raw_data = np.transpose(raw_data)
 
 # init arrays for training and test data
@@ -36,7 +29,7 @@ testing_data = np.empty([int(520*0.2), 2576])
 
 # create training and test data
 for x in range(52):
-        # 8/2 ratio for training and testing datasets	
+        # 8/2 ratio for training and testing datasets
 	training_data[x*8:(x+1)*8] = raw_data[x*10:x*10+8]
 	testing_data[x*2:(x+1)*2] = raw_data[x*10+8:(x+1)*10]
 
@@ -89,9 +82,3 @@ if np.array_equal(sorted_normal, sorted_low):
 	print("yoyoyo")
 else:
 	print("f off")
-
-
-
-
-
-
