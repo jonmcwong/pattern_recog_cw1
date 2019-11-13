@@ -132,3 +132,29 @@ def plot_class_rate(training_data, testing_data, mean_face, eig, image):
     plt.xlabel("Number of eigenvectors used")
     plt.ylabel("Classification Rate (%)")
     
+def combined_mean(N,mean,A,B):
+    return (N[A]*mean[A] + N[B]*mean[B])/(N[A]+N[B])
+
+def combined_cov(N,S,mean,A,B):
+    return (N[A]/(N[A]+N[B]))*S[A] + (N[B]/(N[A]+N[B]))*S[B] + ((N[A]*N[B])/(N[A]+N[B])**2)*np.dot(mean[A]-mean[B],(mean[A]-mean[B]).T)
+
+    
+def modified_lowdim_pca(A): 
+    D,N = A.shape
+    start = time.time()
+    S = (1/N)*np.dot(A.T,A)
+    w, v = LA.eig(S)
+    v /= LA.norm(v,ord=2,axis=0)
+
+    # u = principal components
+    u = np.dot(A,v)
+    u /= LA.norm(u,ord=2,axis=0)
+
+    id = np.argsort(np.abs(w))[::-1]
+    w = w[id]
+    u = u[:,id].real
+    end = time.time()
+    print("low dimension pca took ", end-start ," seconds.")
+
+    return w, u
+    
