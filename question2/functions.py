@@ -132,13 +132,6 @@ def plot_class_rate(training_data, testing_data, mean_face, eig, image):
     plt.xlabel("Number of eigenvectors used")
     plt.ylabel("Classification Rate (%)")
     
-def combined_mean(N,mean,A,B):
-    return (N[A]*mean[A] + N[B]*mean[B])/(N[A]+N[B])
-
-def combined_cov(N,S,mean,A,B):
-    return (N[A]/(N[A]+N[B]))*S[A] + (N[B]/(N[A]+N[B]))*S[B] + ((N[A]*N[B])/(N[A]+N[B])**2)*np.dot(mean[A]-mean[B],(mean[A]-mean[B]).T)
-
-    
 def modified_lowdim_pca(A): 
     D,N = A.shape
     start = time.time()
@@ -157,4 +150,72 @@ def modified_lowdim_pca(A):
     print("low dimension pca took ", end-start ," seconds.")
 
     return w, u
+    
+def combined_mean(ds0,ds1):
+    _,n0 = ds0.shape
+    _,n1 = ds1.shape    
+    mu0 = ds0.mean(axis=0)
+    mu1 = ds1.mean(axis=0)
+    return (n0*mu0 + n1*mu1)/n0+n1
+
+def combined_cov(ds0,ds1):
+    _,n0 = ds0.shape
+    _,n1 = ds1.shape    
+    mu0 = ds0.mean(axis=0)
+    mu1 = ds1.mean(axis=0)
+    s0 = (1/n0)*np.dot(ds0.T,ds0)
+    s1 = (1/n1)*np.dot(ds1.T,ds1)   
+    print("s0 : ",s0.shape)
+    combined_cov =  (n0/(n0+n1))*s0 + (n1/(n0+n1))*s1 + ((n0*n1)/(n0+n1)**2)*np.dot(mu0-mu1,(mu0-mu1).T)
+    print("combined_cov - combined_cov : ", combined_cov.shape)
+    return combined_cov
+
+def combined_ds(ds0,ds1):
+    d0,_ = ds0.shape
+    d1,_ = ds1.shape
+    return np.concatenate((ds0,ds1), axis=0)
+
+def merge_dataset(ds0, ds1):
+    #needs a different name
+    new_mu = combined_mean(ds0, ds1)
+    new_cov = combined_cov(ds0,ds1)
+    combined_training = combined_ds(ds0,ds1)
+    mu0 = ds0.mean(axis=0)
+    mu1 = ds1.mean(axis=0)
+    _,n0 = ds0.shape
+    _,n1 = ds1.shape
+    
+    s0 = (1/n0)*np.dot(ds0,ds0.T)
+    w0, v0 = LA.eig(s0)
+    p0 = np.dot(ds0.T,v0)
+    s1 = (1/n0)*np.dot(ds1,ds1.T)
+    w1, v1 = LA.eig(s1)
+    p1 = np.dot(ds1.T,v1)
+    print("v0 shape : ",p0.shape)
+    print("v1 shape : ",p1.shape)
+    print("mu diff shape : ",(mu0-mu1).shape)
+    phi,r = LA.qr(np.concatenate((v0,v1,(mu0-mu1))), axis = 0)
+    
+    print("phi shape : ", phi.shape)
+    print(phi)
+    temp = np.matmul(np.matmul(phi.T,new_cov),phi)
+    
+    print("temp shape : ", temp.shape)
+    start = time.time()
+    r1,delta = LA.eig(temp)
+    end = time.time()
+    print(start-end)
+    print("r shape : ", r.shape)
+    print("r1 shape : ", r1.shape)
+    print("delta shape : ", delta.shape)
+    
+    print("combined_train : ", combined_training.shape)
+    print("v : ", v.shape)
+    u = np.matmul(combined_training.T,v)
+    u /= LA.norm(u,ord=2,axis=0)
+    id = np.argsort(np.abs(w))[::-1]
+    w = w[id]
+    eigenv = u[:,id].real
+    return combined_training, eigenv, new_mu, new_cov
+    
     

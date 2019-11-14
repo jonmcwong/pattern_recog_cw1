@@ -19,10 +19,12 @@ def lowdim_pca(train, mean_face):
     D,N = A.shape
     start = time.time()
     S = (1/N)*np.dot(A.T,A)
+    print("shape of S : ",S.shape)
 #     print("rank of lowdim cov: ", LA.matrix_rank(S))
     w, v = LA.eig(S)
     v /= LA.norm(v,ord=2,axis=0)
-
+    print("shape of w", w.shape)
+    print("shape of v", v.shape)
     # u = principal components
     u = np.dot(A,v)
     u /= LA.norm(u,ord=2,axis=0)
