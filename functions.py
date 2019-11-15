@@ -104,7 +104,7 @@ def plot_err(training_data, testing_data, mean_face, eig, image):
         index.append(sum(temp)/len(temp))
     plt.plot(index)
     plt.xlabel("Number of eigenvectors used.")
-    plt.ylabel("Average absolute error of testing data")    
+    plt.ylabel("Average absolute error of testing data")
 
 def eigen_analysis(w1,v1,w2,v2):
     plt.subplot(311)
@@ -115,6 +115,8 @@ def eigen_analysis(w1,v1,w2,v2):
     plt.plot(w1[:415]-w2[:415])
     
 def class_rate(training_data, reconstructed):
+    print("training_data.T: ", training_data.T.shape)
+    print("reconstructed: ", reconstructed.shape)
     dist, indx = nn_class(training_data.T, reconstructed)
     result = []
     for i in range(len(indx)):
@@ -133,4 +135,20 @@ def plot_class_rate(training_data, testing_data, mean_face, eig, image):
     plt.plot(Y)
     plt.xlabel("Number of eigenvectors used")
     plt.ylabel("Classification Rate (%)")
+   
+# get classifications accuracies for varying Mlda
+def vary_Mlda(training_weights,testing_weights):
+    acc = []
+    for i in range(1, len(testing_weights[0]) + 1):
+        result = class_rate(training_weights[:i].real, testing_weights[:i].real)
+        acc.append(100*np.sum(result)/len(result))
+    return acc
+
+# plot data
+def plot_data(title, xlabel, ylabel, y_data):
+    plt.plot(y_data)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
+        
     
