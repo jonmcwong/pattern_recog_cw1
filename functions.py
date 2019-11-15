@@ -139,6 +139,18 @@ def class_rate(training_data, reconstructed):
     else:
         raise ValueError("training_data / reconstructed dimension error")
 
+def class_rate2(training_data, reconstructed):
+    if training_data[0].shape == reconstructed[0].shape:
+        dist, indx = nn_class(training_data, reconstructed)
+        result = []
+        for i in range(len(indx)):
+            if indx[i] / 8 == i / 2 :
+                result.append(1)
+            else:
+                result.append(0)
+        return result
+    else:
+        raise ValueError("training_data / reconstructed dimension error")
 def plot_class_rate(training_data, testing_data, mean_face, eig):
     if len(training_data[0]) == 2576 and len(testing_data[0]) == 2576 and len(mean_face[0]) == 2576 and len(eig[0]) ==2576:
         Y = []
@@ -160,7 +172,7 @@ def plot_class_rate(training_data, testing_data, mean_face, eig):
 def vary_Mlda(training_weights,testing_weights):
     acc = []
     for i in range(1, len(testing_weights[0]) + 1):
-        result = class_rate(training_weights[:i].real, testing_weights[:i].real)
+        result = class_rate(training_weights[:,:i].real, testing_weights[:,:i].real)
         acc.append(100*np.sum(result)/len(result))
     return acc
 
