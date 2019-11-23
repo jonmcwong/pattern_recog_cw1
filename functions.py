@@ -260,6 +260,40 @@ def merge_dataset(ds0, ds1):
 
     
     return combined_training, p3.T, new_mu.T.reshape(1,-1), new_cov
+
+def class_rate_tensor(training_data, testing_data):
+    x,y,z = testing_data.shape
+    x0,y0,z0 = training_data.shape
+    result5 = []
+    if x == x0 and z == z0:
+        result = np.empty([x,y])
+#         print(result.shape)
+        for i in range(x):
+            dist, indx = nn_class(training_data[i], testing_data[i])
+            print("closest", indx.flatten())
+            label = np.empty(indx.shape)
+            #populate labels
+            for j in range(len(indx)):
+                label[j] = int((indx[j] + 7) / 8)
+#             print(label.flatten().shape)
+            result[i] = label.flatten()
+        # get mode
+        mode = np.empty([y])
+        for k in range(len(mode)):
+            temp = []
+            # for every model
+            for l in range(x):
+                temp.append(result[l,k])
+#             print("predictions ", temp)
+#             temp = [result[0,k], result[1,k], result[2,k], result[3,k]]
+            if int((k + 1) / 2) == int(max(set(temp), key=temp.count)):
+                result5.append(1)
+            else:
+                result5.append(0)
+        return result5
+    else:
+        print("x0 ", x0, " y0 ", y0, " z0 ", z0)
+        raise ValueError("training_data / testing_data dimension error")
     
     
 
