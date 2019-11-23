@@ -8,7 +8,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.neighbors import NearestNeighbors
 
-savedir = "results/question1/"
+savedir = "results/question2/"
 
 def show_img(img):
     temp = img.copy()
@@ -114,7 +114,8 @@ def plot_err(training_data, testing_data, mean_face, eig, image):
 #         plt.title(("Average absolute error of training data["+str(image)+"]"))
         plt.xlabel("Number of principal components used.")
         plt.ylabel("Mean absolute error") 
-        plt.savefig(savedir+"mae.eps")
+        plt.axis([0,415,7.5,27.5])
+        plt.savefig(savedir+"mae_ds0.eps")
     else:
         raise ValueError("Input Dimension Error")
 
@@ -142,7 +143,7 @@ def class_rate(training_data, reconstructed):
         dist, indx = nn_class(training_data, reconstructed)
         result = []
         for i in range(len(indx)):
-            if int(i/2)*8 <= indx[i] <= (int(i/2)+1)*8:
+            if int(i/2)*2 <= indx[i] <= (int(i/2)+1)*2:
                 result.append(1)
             else:
                 result.append(0)
@@ -164,7 +165,8 @@ def plot_class_rate(training_data, testing_data, mean_face, eig):
         plt.title(("Classification rate of testing data"))
         plt.xlabel("Number of principal components used")
         plt.ylabel("Classification Rate (%)")
-        plt.savefig(savedir+"class_rate.eps")
+        plt.axis([0,415,0,30])
+        plt.savefig(savedir+"class_rate_ds0.eps")
     else:
        raise ValueError("training / testing / mean dimension error")
     
