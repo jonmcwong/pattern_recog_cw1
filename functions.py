@@ -8,23 +8,32 @@ import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.neighbors import NearestNeighbors
 
+savedir = "results/question2/"
+
 def show_img(img):
     temp = img.copy()
     temp.resize((46,56))
     im = Image.fromarray(temp.T)
     im.show()
+    
+def save_img(img, filename):
+    temp = img.copy()
+    temp.resize((46,56))
+    im = Image.fromarray(temp.T)
+    im = im.convert("L")
+    im.save(filename)
 
 def lowdim_pca(train, mean_face): 
     A = train - mean_face
     D,N = A.shape
     start = time.time()
     S = (1/N)*np.dot(A.T,A)
-    print("shape of S : ",S.shape)
+#     print("shape of S : ",S.shape)
 #     print("rank of lowdim cov: ", LA.matrix_rank(S))
     w, v = LA.eig(S)
     v /= LA.norm(v,ord=2,axis=0)
-    print("shape of w", w.shape)
-    print("shape of v", v.shape)
+#     print("shape of w", w.shape)
+#     print("shape of v", v.shape)
     # u = principal components
     u = np.dot(A,v)
     u /= LA.norm(u,ord=2,axis=0)
@@ -53,6 +62,7 @@ def normal_pca(train, mean_face):
     # nz_u = principal components with non-zero eigenvals
 #     print("number of zero eigen vals: ", np.sum(w != 0))
     nz_u = v[w != 0]
+    nz_u = np.dot(A.T,nz_u)
     nz_u /= LA.norm(nz_u, ord=2, axis=0)
     nz_w = w[w != 0]
 #     print("eigenvalues: ", nz_w)
@@ -101,9 +111,11 @@ def plot_err(training_data, testing_data, mean_face, eig, image):
                 temp.append(get_err(testing_data[j], faces[j]))
             index.append(sum(temp)/len(temp))
         plt.plot(index)
-        plt.title(("Average absolute error of testing data["+str(image)+"]"))
-        plt.xlabel("Number of eigenvectors used.")
-        plt.ylabel("Average absolute error of testing data") 
+#         plt.title(("Average absolute error of training data["+str(image)+"]"))
+        plt.xlabel("Number of principal components used.")
+        plt.ylabel("Mean absolute error") 
+        plt.axis([0,415,7.5,27.5])
+        plt.savefig(savedir+"mae_ds0.eps")
     else:
         raise ValueError("Input Dimension Error")
 
@@ -131,7 +143,7 @@ def class_rate(training_data, reconstructed):
         dist, indx = nn_class(training_data, reconstructed)
         result = []
         for i in range(len(indx)):
-            if int(i/2)*8 <= indx[i] <= (int(i/2)+1)*8:
+            if int(i/2)*2 <= indx[i] <= (int(i/2)+1)*2:
                 result.append(1)
             else:
                 result.append(0)
@@ -151,27 +163,12 @@ def plot_class_rate(training_data, testing_data, mean_face, eig):
 
         plt.plot(Y)
         plt.title(("Classification rate of testing data"))
-        plt.xlabel("Number of eigenvectors used")
+        plt.xlabel("Number of principal components used")
         plt.ylabel("Classification Rate (%)")
+        plt.axis([0,415,0,30])
+        plt.savefig(savedir+"class_rate_ds0.eps")
     else:
-        raise ValueError("training / testing / mean dimension error")
-
-
-def vary_Mlda(training_weights,testing_weights):
-    # get classifications accuracies for varying Mlda
-    acc = []
-    for i in range(1, len(testing_weights[0]) + 1):
-        result = class_rate(training_weights[:,:i].real, testing_weights[:,:i].real)
-        acc.append(100*np.sum(result)/len(result))
-    return acc
-
-def plot_data(title, xlabel, ylabel, y_data):
-    # plot data
-    plt.plot(y_data)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.savefig(title + ".png")
+       raise ValueError("training / testing / mean dimension error")
     
     
 def combined_mean(ds0,ds1):
@@ -195,26 +192,18 @@ def combined_cov(ds0,ds1):
 def combined_ds(ds0,ds1):
     n0,d0 = ds0.shape
     n1,d1 = ds1.shape
-    print("d0 : ",d0)
-    print("n0 : ",n0)
     combined = np.empty([n0+n1, d0])
-    print("combined shape : ",combined.shape)
 
     #for each class:
     for d_class in range(52):
         #get nth 10% from d0
         f0 = n0/52
         f1 = n1/52
-        print(f0)
-        print(f1)
+
         start0= int(d_class*(f0+f1))
         end0 = int(d_class*(f0+f1)+f0)
         start1 = int(d_class*(f0+f1)+f0)
         end1 = int((d_class+1)*(f0+f1))
-        print("start0", start0)
-        print("end0", end0)
-        print("start1", start1)
-        print("end1", end1)
         
         combined[start0:end0] = ds0[int(d_class*f0):int((d_class+1)*f0)]
         combined[start1:end1] = ds1[int(d_class*f1):int((d_class+1)*f1)]
@@ -233,7 +222,7 @@ def merge_dataset(ds0, ds1):
     mu1 = ds1.mean(axis=0)
     _,n0 = ds0.shape
     _,n1 = ds1.shape
-    
+
     s0 = (1/n0)*np.dot(ds0,ds0.T)
     w0, v0 = LA.eig(s0)
     p0 = np.dot(ds0.T,v0)
@@ -250,23 +239,61 @@ def merge_dataset(ds0, ds1):
     w1 = w1[id]
     p1 = p1[:,id].real
 
+    start = time.time()
+    
     phi,_r = LA.qr(np.concatenate((p0,p1,(mu0-mu1).reshape(-1,1)), axis = 1))
     
-    phi /= LA.norm(phi,ord=2,axis=0)
+#     phi /= LA.norm(phi,ord=2,axis=0)
     
     temp = np.matmul(np.matmul(phi.T,new_cov),phi)
     
     delta,r = LA.eig(temp)
-    
+    end = time.time()
+    print("computing merged dataset information required ", end-start, " seconds.")
+        
     r /= LA.norm(r,ord=2,axis=0)
     id = np.argsort(np.abs(delta))[::-1]
     delta = delta[id]
     r = r[:,id].real
     
     p3 = np.matmul(phi,r)
-    
+
     
     return combined_training, p3.T, new_mu.T.reshape(1,-1), new_cov
+
+def class_rate_tensor(training_data, testing_data):
+    x,y,z = testing_data.shape
+    x0,y0,z0 = training_data.shape
+    result5 = []
+    if x == x0 and z == z0:
+        result = np.empty([x,y])
+#         print(result.shape)
+        for i in range(x):
+            dist, indx = nn_class(training_data[i], testing_data[i])
+            print("closest", indx.flatten())
+            label = np.empty(indx.shape)
+            #populate labels
+            for j in range(len(indx)):
+                label[j] = int((indx[j] + 7) / 8)
+#             print(label.flatten().shape)
+            result[i] = label.flatten()
+        # get mode
+        mode = np.empty([y])
+        for k in range(len(mode)):
+            temp = []
+            # for every model
+            for l in range(x):
+                temp.append(result[l,k])
+#             print("predictions ", temp)
+#             temp = [result[0,k], result[1,k], result[2,k], result[3,k]]
+            if int((k + 1) / 2) == int(max(set(temp), key=temp.count)):
+                result5.append(1)
+            else:
+                result5.append(0)
+        return result5
+    else:
+        print("x0 ", x0, " y0 ", y0, " z0 ", z0)
+        raise ValueError("training_data / testing_data dimension error")
     
     
 
